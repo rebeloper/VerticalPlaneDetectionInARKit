@@ -19,7 +19,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     window = UIWindow()
     window?.makeKeyAndVisible()
     
-    let gameViewController = GameViewController()
+    let gameViewController = GameViewController() // choose ViewController for final or GameViewController for starter
     window?.rootViewController = gameViewController
     return true
   }
