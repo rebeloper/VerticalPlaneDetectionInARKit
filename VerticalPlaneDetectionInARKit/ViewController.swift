@@ -1,14 +1,14 @@
 //
-//  GameViewController.swift
+//  ViewController.swift
 //  VerticalPlaneDetectionInARKit
 //
-//  Created by Alex Nagy on 30/03/2018.
+//  Created by Alex Nagy on 31/03/2018.
 //  Copyright © 2018 Alex Nagy. All rights reserved.
 //
 
 import ARKit
 
-class GameViewController: UIViewController, ARSCNViewDelegate {
+class ViewController: UIViewController, ARSCNViewDelegate {
   
   let arView: ARSCNView = {
     let view = ARSCNView()
@@ -17,7 +17,7 @@ class GameViewController: UIViewController, ARSCNViewDelegate {
   }()
   
   let configuration = ARWorldTrackingConfiguration()
-
+  
   override func viewDidLoad() {
     super.viewDidLoad()
     // Do any additional setup after loading the view, typically from a nib.
@@ -29,19 +29,19 @@ class GameViewController: UIViewController, ARSCNViewDelegate {
     arView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
     arView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
     
-    configuration.planeDetection = .horizontal
+    configuration.planeDetection = [.horizontal, .vertical]
     arView.session.run(configuration, options: [])
     arView.debugOptions = [ARSCNDebugOptions.showFeaturePoints]
     
     arView.delegate = self
   }
   
-  func create(anchor: ARPlaneAnchor) -> SCNNode {
+  func create(_ name: String, anchor: ARPlaneAnchor) -> SCNNode {
     let node = SCNNode()
-    node.name = "floor"
+    node.name = name
     node.eulerAngles = SCNVector3(90.degreesToRadians, 0, 0)
     node.geometry = SCNPlane(width: CGFloat(anchor.extent.x), height: CGFloat(anchor.extent.z))
-    node.geometry?.firstMaterial?.diffuse.contents = #imageLiteral(resourceName: "Floor")
+    node.geometry?.firstMaterial?.diffuse.contents = name == "wall" ? #imageLiteral(resourceName: "Wall") : #imageLiteral(resourceName: "Floor")
     node.geometry?.firstMaterial?.isDoubleSided = true
     node.position = SCNVector3(anchor.center.x, anchor.center.y, anchor.center.z)
     return node
@@ -54,7 +54,7 @@ class GameViewController: UIViewController, ARSCNViewDelegate {
       }
     }
   }
-
+  
   override func didReceiveMemoryWarning() {
     super.didReceiveMemoryWarning()
     // Dispose of any resources that can be recreated.
@@ -63,23 +63,42 @@ class GameViewController: UIViewController, ARSCNViewDelegate {
   func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
     guard let anchorPlane = anchor as? ARPlaneAnchor else { return }
     print("New plane anchor found with extent:", anchorPlane.extent)
-    let planeNode = create(anchor: anchorPlane)
+    var name = "wall"
+    if anchorPlane.alignment == ARPlaneAnchor.Alignment.vertical {
+      name = "wall"
+    } else {
+      name = "floor"
+    }
+    let planeNode = create(name, anchor: anchorPlane)
     node.addChildNode(planeNode)
   }
   
   func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
     guard let anchorPlane = anchor as? ARPlaneAnchor else { return }
     print("Plane anchor updated with extent:", anchorPlane.extent)
-    removeNode(named: "floor")
-    let planeNode = create(anchor: anchorPlane)
+    var name = "wall"
+    if anchorPlane.alignment == ARPlaneAnchor.Alignment.vertical {
+      name = "wall"
+    } else {
+      name = "floor"
+    }
+    removeNode(named: name)
+    let planeNode = create(name, anchor: anchorPlane)
     node.addChildNode(planeNode)
   }
-
+  
   func renderer(_ renderer: SCNSceneRenderer, didRemove node: SCNNode, for anchor: ARAnchor) {
     guard let anchorPlane = anchor as? ARPlaneAnchor else { return }
     print("Plane anchor removed with extent:", anchorPlane.extent)
-    removeNode(named: "floor")
+    var name = "wall"
+    if anchorPlane.alignment == ARPlaneAnchor.Alignment.vertical {
+      name = "wall"
+    } else {
+      name = "floor"
+    }
+    removeNode(named: name)
   }
-
+  
 }
+
 
